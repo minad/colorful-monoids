@@ -58,7 +58,7 @@ module System.Console.Style (
 import Data.Foldable (toList)
 import Data.Word
 import Data.Bool (bool)
-import Data.List (intercalate)
+import Data.List (intercalate, isPrefixOf, isInfixOf)
 import Control.Monad.State.Strict
 import System.IO (Handle, stdout, hPutStr, hIsTerminalDevice)
 import System.Environment (getEnv)
@@ -144,9 +144,11 @@ hGetTerm h = liftIO $ do
 
 -- TODO improve this
 envToTerm :: String -> Term
-envToTerm "xterm" = TermRGB
-envToTerm "dumb"  = TermDumb
-envToTerm _       = TermRGB
+envToTerm "dumb" = TermDumb
+envToTerm term | any (flip isPrefixOf term) rgbTerminals = TermRGB
+               | "256" `isInfixOf` term = Term256
+               | otherwise = Term8
+  where rgbTerminals = ["xterm", "konsole", "gnome", "st", "linux"]
 
 mkDefaultStyle :: Handle -> Term -> Style
 mkDefaultStyle h t = Style
