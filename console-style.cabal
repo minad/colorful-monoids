@@ -6,7 +6,7 @@ name:           console-style
 version:        0.0.1.0
 synopsis:       Styled console text output using ANSI escape sequences.
 description:    Styled console text output using ANSI escape sequences.
-category:       Text
+category:       Text, User Interfaces, Monad
 stability:      experimental
 homepage:       https://github.com/minad/console-style#readme
 bug-reports:    https://github.com/minad/console-style/issues
