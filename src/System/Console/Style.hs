@@ -150,18 +150,15 @@ envToTerm term | any (flip isPrefixOf term) rgbTerminals = TermRGB
                | otherwise = Term8
   where rgbTerminals = ["xterm", "konsole", "gnome", "st", "linux"]
 
-mkDefaultStyle :: Handle -> Term -> Style
-mkDefaultStyle h t = Style
+hDefaultStyle :: Handle -> Term -> Style
+hDefaultStyle h t = Style
   { styleStack  = pure defaultStyleState
   , styleHandle = h
   , styleTerm   = t
   }
 
-hDefaultStyle :: MonadIO m => Handle -> m Style
-hDefaultStyle h = mkDefaultStyle h <$> hGetTerm h
-
 defaultStyle :: Term -> Style
-defaultStyle = mkDefaultStyle stdout
+defaultStyle = hDefaultStyle stdout
 
 defaultStyleState :: StyleState
 defaultStyleState = StyleState
@@ -175,7 +172,7 @@ defaultStyleState = StyleState
   }
 
 hRunStyle :: MonadIO m => Handle -> StyleT m a -> m a
-hRunStyle h x = hDefaultStyle h >>= evalStateT x
+hRunStyle h x = hDefaultStyle h <$> hGetTerm h >>= evalStateT x
 
 runStyle :: Term -> State Style a -> a
 runStyle = flip evalState . defaultStyle
