@@ -57,7 +57,7 @@ rgbExample = runWithStyle [] $
 
 specialExample :: IO ()
 specialExample = runWithStyle [] $
-  for_ [(Bold,NotBold),(Italic,NotItalic),(Under,NotUnder),(Invert,NotInvert)] $ \(a, b) -> do
+  for_ [(Bold,NotBold),(Italic,NotItalic),(Under,NotUnder),(Invert,NotInvert),(Blink,NotBlink)] $ \(a, b) -> do
     setStyle [a]
     liftIO $ printf "%-20s" $ show a
     setStyle [b]

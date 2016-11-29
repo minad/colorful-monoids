@@ -35,7 +35,6 @@
 -----------------------------------------------------------
 
 module System.Console.Style (
-  Blink(..),
   Color(..),
   HasStyle(..),
   SetStyle(..),
@@ -86,9 +85,6 @@ data Color
   | RGB      !Word8 !Word8 !Word8
   deriving (Eq, Ord, Show)
 
-data Blink = NoBlink | BlinkSlow | BlinkFast
-  deriving (Eq, Ord, Show)
-
 data Term = TermDumb | Term8 | Term256 | TermRGB | TermWin
   deriving (Eq, Show)
 
@@ -104,7 +100,8 @@ data SetStyle
   | Save
   | Restore
   | Reset
-  | Blink   !Blink
+  | Blink
+  | NotBlink
   | FgColor !Color
   | BgColor !Color
   deriving (Eq, Ord, Show)
@@ -130,7 +127,7 @@ data StyleState = StyleState
   , styleItalic :: !Bool
   , styleUnder  :: !Bool
   , styleInvert :: !Bool
-  , styleBlink  :: !Blink
+  , styleBlink  :: !Bool
   , styleFg     :: !Color
   , styleBg     :: !Color
   } deriving (Eq, Ord, Show)
@@ -166,7 +163,7 @@ defaultStyleState = StyleState
   , styleItalic = False
   , styleInvert = False
   , styleUnder  = False
-  , styleBlink  = NoBlink
+  , styleBlink  = False
   , styleFg     = DefaultColor
   , styleBg     = DefaultColor
   }
@@ -215,16 +212,17 @@ updateStyle cmd (Style stack h t) = Style (foldl go stack cmd) h t
         go (x:|xs)     Save        = x :| (x:xs)
         go (_:|xs)     Reset       = defaultStyleState :| xs
         go (x:|xs)     Bold        = x { styleBold   = True  } :| xs
-        go (x:|xs)     Invert      = x { styleInvert = True  } :| xs
-        go (x:|xs)     Italic      = x { styleItalic = True  } :| xs
         go (x:|xs)     NotBold     = x { styleBold   = False } :| xs
+        go (x:|xs)     Invert      = x { styleInvert = True  } :| xs
         go (x:|xs)     NotInvert   = x { styleInvert = False } :| xs
+        go (x:|xs)     Italic      = x { styleItalic = True  } :| xs
         go (x:|xs)     NotItalic   = x { styleItalic = False } :| xs
-        go (x:|xs)     NotUnder    = x { styleUnder  = False } :| xs
         go (x:|xs)     Under       = x { styleUnder  = True  } :| xs
-        go (x:|xs)     (BgColor c) = x { styleBg     = c } :| xs
-        go (x:|xs)     (Blink b)   = x { styleBlink  = b } :| xs
-        go (x:|xs)     (FgColor c) = x { styleFg     = c } :| xs
+        go (x:|xs)     NotUnder    = x { styleUnder  = False } :| xs
+        go (x:|xs)     Blink       = x { styleBlink  = True  } :| xs
+        go (x:|xs)     NotBlink    = x { styleBlink  = False } :| xs
+        go (x:|xs)     (BgColor c) = x { styleBg     = c     } :| xs
+        go (x:|xs)     (FgColor c) = x { styleFg     = c     } :| xs
 
 reduceColor :: Term -> Color -> Color
 reduceColor Term8    = reduceColor8
@@ -296,12 +294,12 @@ sgrCode (Style _ _ TermWin)  _ = ""
 sgrCode (Style (old:|_) _ t) (Style (new:|_) _ _)
   | old /= new && new == defaultStyleState = csi 'm' [0]
   | otherwise = csi 'm' $
-    update styleBlink  (pure . sgrBlinkArg) ++
-    flag   styleBold   1                    ++
-    flag   styleItalic 3                    ++
-    flag   styleUnder  4                    ++
-    flag   styleInvert 7                    ++
-    color  styleFg     0                    ++
+    flag   styleBlink  5  ++
+    flag   styleBold   1  ++
+    flag   styleItalic 3  ++
+    flag   styleUnder  4  ++
+    flag   styleInvert 7  ++
+    color  styleFg     0  ++
     color  styleBg     10
 
   where
@@ -311,11 +309,6 @@ sgrCode (Style (old:|_) _ t) (Style (new:|_) _ _)
 
   flag  f n = update f $ bool [20 + n] [n]
   color f n = update (reduceColor t . f) (\x -> let (c:|cs) = sgrColorArgs x in c + n : cs)
-
-sgrBlinkArg :: Blink -> Word8
-sgrBlinkArg NoBlink   = 25
-sgrBlinkArg BlinkSlow = 5
-sgrBlinkArg BlinkFast = 6
 
 sgrColorArgs :: Color -> NonEmpty Word8
 sgrColorArgs (Color256 n) = 38 :| [5, n]
