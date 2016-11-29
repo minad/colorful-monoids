@@ -43,12 +43,11 @@ module System.Console.Style (
   StyleT,
   Term(..),
   defaultStyle,
+  hDefaultStyle,
   hGetTerm,
+  hRunStyle,
   hRunWithStyle,
-  hSetStyle,
-  hWithStyle,
   runStyle,
-  runStyleT,
   runWithStyle,
   setStyle,
   styleCode',
@@ -118,7 +117,11 @@ instance HasStyle Style where
   getStyle = id
   putStyle = const
 
-data Style = Style !(NonEmpty StyleState) !Term
+data Style = Style
+  { styleStack  :: !(NonEmpty StyleState)
+  , styleHandle :: !Handle
+  , styleTerm   :: !Term
+  }
 
 type StyleT = StateT Style
 
@@ -133,8 +136,8 @@ data StyleState = StyleState
   } deriving (Eq, Ord, Show)
 
 hGetTerm :: MonadIO m => Handle -> m Term
-hGetTerm handle = liftIO $ do
-  term <- hIsTerminalDevice handle
+hGetTerm h = liftIO $ do
+  term <- hIsTerminalDevice h
   if term
     then envToTerm  <$> getEnv "TERM"
     else pure TermDumb
@@ -145,8 +148,18 @@ envToTerm "xterm" = TermRGB
 envToTerm "dumb"  = TermDumb
 envToTerm _       = TermRGB
 
+mkDefaultStyle :: Handle -> Term -> Style
+mkDefaultStyle h t = Style
+  { styleStack  = pure defaultStyleState
+  , styleHandle = h
+  , styleTerm   = t
+  }
+
+hDefaultStyle :: MonadIO m => Handle -> m Style
+hDefaultStyle h = mkDefaultStyle h <$> hGetTerm h
+
 defaultStyle :: Term -> Style
-defaultStyle = Style $ pure defaultStyleState
+defaultStyle = mkDefaultStyle stdout
 
 defaultStyleState :: StyleState
 defaultStyleState = StyleState
@@ -159,19 +172,17 @@ defaultStyleState = StyleState
   , styleBg     = DefaultColor
   }
 
-runStyleT :: Monad m => Term -> StyleT m a -> m a
-runStyleT = flip evalStateT . defaultStyle
+hRunStyle :: MonadIO m => Handle -> StyleT m a -> m a
+hRunStyle h x = hDefaultStyle h >>= evalStateT x
 
 runStyle :: Term -> State Style a -> a
 runStyle = flip evalState . defaultStyle
 
-hRunWithStyle :: MonadIO m => Handle -> [SetStyle] -> StyleT m a -> m a
-hRunWithStyle handle style action = do
-  term <- hGetTerm handle
-  runStyleT term $ hWithStyle handle style action
-
 runWithStyle :: MonadIO m => [SetStyle] -> StyleT m a -> m a
 runWithStyle = hRunWithStyle stdout
+
+hRunWithStyle :: MonadIO m => Handle -> [SetStyle] -> StyleT m a -> m a
+hRunWithStyle h style action = hRunStyle h $ withStyle style action
 
 styleCode' :: Foldable f => Style -> f SetStyle -> (Style, String)
 styleCode' style cmd = (style', sgrCode style style')
@@ -184,28 +195,22 @@ styleCode cmd = do
   modify $ putStyle style'
   pure str
 
-hSetStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => Handle -> f SetStyle -> m ()
-hSetStyle handle cmd = do
+setStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m ()
+setStyle cmd = do
   style <- gets getStyle
   let style' = updateStyle cmd style
-  liftIO $ hPutStr handle $ sgrCode style style'
+  liftIO $ hPutStr (styleHandle style) $ sgrCode style style'
   modify $ putStyle style'
 
-hWithStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => Handle -> f SetStyle -> m a -> m a
-hWithStyle handle cmd action = do
-  hSetStyle handle (Save : toList cmd)
+withStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m a -> m a
+withStyle cmd action = do
+  setStyle (Save : toList cmd)
   ret <- action
-  hSetStyle handle [Restore]
+  setStyle [Restore]
   pure ret
 
-withStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m a -> m a
-withStyle = hWithStyle stdout
-
-setStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m ()
-setStyle = hSetStyle stdout
-
 updateStyle :: Foldable f => f SetStyle -> Style -> Style
-updateStyle cmd (Style stack term) = Style (foldl go stack cmd) term
+updateStyle cmd (Style stack h t) = Style (foldl go stack cmd) h t
   where go (_:|(x:xs)) Restore     = x :| xs
         go (_:|[])     Restore     = pure defaultStyleState
         go (x:|xs)     Save        = x :| (x:xs)
@@ -287,9 +292,9 @@ csi :: Char -> [Word8] -> String
 csi cmd args = "\ESC[" ++ intercalate ";" (map show args) ++ pure cmd
 
 sgrCode :: Style -> Style -> String
-sgrCode (Style _ TermDumb) _ = ""
-sgrCode (Style _ TermWin)  _ = ""
-sgrCode (Style (old:|_) term) (Style (new:|_) _)
+sgrCode (Style _ _ TermDumb) _ = ""
+sgrCode (Style _ _ TermWin)  _ = ""
+sgrCode (Style (old:|_) _ t) (Style (new:|_) _ _)
   | old /= new && new == defaultStyleState = csi 'm' [0]
   | otherwise = csi 'm' $
     update styleBlink  (pure . sgrBlinkArg) ++
@@ -306,7 +311,7 @@ sgrCode (Style (old:|_) term) (Style (new:|_) _)
   update f g = let new' = f new in bool [] (g new') (new' /= f old)
 
   flag  f n = update f $ bool [20 + n] [n]
-  color f n = update (reduceColor term . f) (\x -> let (c:|cs) = sgrColorArgs x in c + n : cs)
+  color f n = update (reduceColor t . f) (\x -> let (c:|cs) = sgrColorArgs x in c + n : cs)
 
 sgrBlinkArg :: Blink -> Word8
 sgrBlinkArg NoBlink   = 25
