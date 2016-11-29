@@ -1,0 +1,27 @@
+name: console-style
+version: 0.0.1.0
+category: Text
+description: Styled console text output using ANSI escape sequences.
+synopsis: Styled console text output using ANSI escape sequences.
+stability: experimental
+author: Daniel Mendler <mail@daniel-mendler.de>
+maintainer: Daniel Mendler <mail@daniel-mendler.de>
+copyright: 2016 Daniel Mendler
+license: MIT
+github: minad/console-style
+
+tested-with:
+  GHC == 7.10.3,
+  GHC == 8.0.1
+
+ghc-options:
+- -Wall
+
+dependencies:
+- base         >= 4.8  && < 5
+- transformers >= 0.4 && < 0.6
+- mtl          >= 2.2 && < 2.4
+- semigroups   >= 0.9  && < 1
+
+library:
+  source-dirs: src
