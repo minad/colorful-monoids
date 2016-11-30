@@ -91,11 +91,11 @@ basicExample = runWithStyle [FgColor Blue] $ do
 
   liftIO $ putStrLn "Normal output"
 
-styleCodeExample :: IO ()
-styleCodeExample = putStrLn (start ++ "Green" ++ end)
-  where style = defaultStyle Term8
-        (style', start) = styleCode' style [FgColor Green, Bold]
-        (_, end) = styleCode' style' [Reset]
+setStyleCodeExample :: IO ()
+setStyleCodeExample = runStyleT Term8 $ do
+  start <- setStyleCode [FgColor Green, Bold]
+  end <- setStyleCode [Reset]
+  liftIO $ putStrLn (start ++ "Green" ++ end)
 
 main :: IO ()
 main = do
@@ -105,4 +105,4 @@ main = do
   specialExample
   stackExample
   basicExample
-  styleCodeExample
+  setStyleCodeExample

@@ -49,11 +49,14 @@ module System.Console.Style (
   hRunStyle,
   hRunWithStyle,
   runStyle,
+  runStyleT,
   runWithStyle,
   setStyle,
-  styleCode',
-  styleCode,
+  setStyleCode,
   withStyle,
+  changeStyle,
+  applyStyle,
+  applyStyleCode,
 ) where
 
 import Data.Foldable (toList)
@@ -64,6 +67,7 @@ import Control.Monad.State.Strict
 import System.IO (Handle, stdout, hPutStr, hIsTerminalDevice)
 import System.Environment (getEnv)
 import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty
 
 -- | Console color
 data Color
@@ -129,6 +133,7 @@ instance HasStyle Style where
 -- a stack of the applied styles.
 data Style = Style
   { styleStack  :: !(NonEmpty StyleState)
+  , styleActive :: !StyleState
   , styleHandle :: !Handle
   , styleTerm   :: !Term
   }
@@ -172,6 +177,7 @@ hDefaultStyle h t = Style
   { styleStack  = pure defaultStyleState
   , styleHandle = h
   , styleTerm   = t
+  , styleActive = defaultStyleState
   }
 
 -- | The function @(defaultStyle term)@ returns the default 'Style' configured with terminal type @term@.
@@ -199,6 +205,11 @@ hRunStyle h x = hDefaultStyle h <$> hGetTerm h >>= evalStateT x
 runStyle :: Term -> State Style a -> a
 runStyle = flip evalState . defaultStyle
 
+-- | The action @(runStyleT term action)@ runs the 'StateT' monad transformer providing
+-- the active 'Style' for the given @action@.
+runStyleT :: Monad m => Term -> StateT Style m a -> m a
+runStyleT = flip evalStateT . defaultStyle
+
 -- | The action @(runWithStyle cmd action)@ runs the 'StateT' monad transformer providing
 -- the active 'Style' for the given @action@.
 --
@@ -213,45 +224,18 @@ runWithStyle = hRunWithStyle stdout
 -- The output on @handle@ within the @action@ is modified by the given 'StyleSet' commands @cmd@.
 -- The 'Style' is restored to the defaults afterwards.
 hRunWithStyle :: (MonadIO m, Foldable f) => Handle -> f SetStyle -> StateT Style m a -> m a
-hRunWithStyle h style action = hRunStyle h $ withStyle style action
+hRunWithStyle h cmd action = hRunStyle h $ withStyle cmd action
 
--- | The function @(styleCode' style cmd)@ returns the modified style status and ANSI code
--- corresponding to the 'StyleSet' commands @cmd@.
-styleCode' :: Foldable f => Style -> f SetStyle -> (Style, String)
-styleCode' style cmd = (style', sgrCode style style')
-  where style' = updateStyle cmd style
-
--- | The action @(styleCode cmd)@ returns the ANSI code corresponding to the 'StyleSet' commands @cmd@.
--- This action must be executed within a monadic context providing the active 'Style'.
-styleCode :: (MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m String
-styleCode cmd = do
-  style <- gets getStyle
-  let (style', str) = styleCode' style cmd
-  modify $ putStyle style'
-  pure str
-
--- | The action @(setStyle cmd)@ modifies the active 'Style' by executing the 'StyleSet' commands @cmd@.
-setStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m ()
-setStyle cmd = do
-  style <- gets getStyle
-  let style' = updateStyle cmd style
-  liftIO $ hPutStr (styleHandle style) $ sgrCode style style'
-  modify $ putStyle style'
-
--- | The action @(withStyle cmd action)@ executes the @action@ with the active 'Style' modified
--- by the 'StyleSet' commands @cmd@.
+-- | The action @(changeStyle cmd)@ modifies the active 'Style' by executing the 'StyleSet' commands @cmd@
+-- without applying the changes.
 --
--- The style is restored to the previous 'Style' afterwards.
-withStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m a -> m a
-withStyle cmd action = do
-  setStyle (Save : toList cmd)
-  ret <- action
-  setStyle [Restore]
-  pure ret
-
-updateStyle :: Foldable f => f SetStyle -> Style -> Style
-updateStyle cmd (Style stack h t) = Style (foldl go stack cmd) h t
-  where go (_:|(x:xs)) Restore     = x :| xs
+-- You have to call applyStyle or applyStyleCode afterwards!
+changeStyle :: (MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m ()
+changeStyle cmd = do
+  style <- gets getStyle
+  modify $ putStyle $ new style
+  where new style = style { styleStack = foldl go (styleStack style) cmd }
+        go (_:|(x:xs)) Restore     = x :| xs
         go (_:|[])     Restore     = pure defaultStyleState
         go (x:|xs)     Save        = x :| (x:xs)
         go (_:|xs)     Reset       = defaultStyleState :| xs
@@ -267,6 +251,41 @@ updateStyle cmd (Style stack h t) = Style (foldl go stack cmd) h t
         go (x:|xs)     NotBlink    = x { styleBlink  = False } :| xs
         go (x:|xs)     (BgColor c) = x { styleBg     = c     } :| xs
         go (x:|xs)     (FgColor c) = x { styleFg     = c     } :| xs
+
+-- | The action @applyStyle@ applies the latest style changes.
+applyStyle :: (MonadIO m, MonadState s m, HasStyle s) => m ()
+applyStyle = do
+  h <- gets (styleHandle . getStyle)
+  applyStyleCode >>= liftIO . hPutStr h
+
+-- | The action @applyStyleCode@ returns the ANSI code for the latest style changes.
+applyStyleCode :: (MonadState s m, HasStyle s) => m String
+applyStyleCode = do
+  style <- gets getStyle
+  let style' = style { styleActive = NonEmpty.head $ styleStack style }
+  modify $ putStyle style'
+  pure $ sgrCode (styleTerm style) (styleActive style) (styleActive style')
+
+-- | The action @(styleCode cmd)@ returns the ANSI code corresponding to the 'StyleSet' commands @cmd@.
+setStyleCode :: (MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m String
+setStyleCode cmd = changeStyle cmd >> applyStyleCode
+
+-- | The action @(setStyle cmd)@ modifies the active 'Style' by executing the 'StyleSet' commands @cmd@.
+--
+-- The style changes are applied immediately.
+setStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m ()
+setStyle cmd = changeStyle cmd >> applyStyle
+
+-- | The action @(withStyle cmd action)@ executes the @action@ with the active 'Style' modified
+-- by the 'StyleSet' commands @cmd@.
+--
+-- The style is restored to the previous 'Style' afterwards.
+withStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m a -> m a
+withStyle cmd action = do
+  setStyle (Save : toList cmd)
+  ret <- action
+  setStyle [Restore]
+  pure ret
 
 reduceColor :: Term -> Color -> Color
 reduceColor Term8    = reduceColor8
@@ -332,10 +351,10 @@ reduceColor256 x = x
 csi :: Char -> [Word8] -> String
 csi cmd args = "\ESC[" ++ intercalate ";" (map show args) ++ pure cmd
 
-sgrCode :: Style -> Style -> String
-sgrCode (Style _ _ TermDumb) _ = ""
-sgrCode (Style _ _ TermWin)  _ = ""
-sgrCode (Style (old:|_) _ t) (Style (new:|_) _ _)
+sgrCode :: Term -> StyleState -> StyleState -> String
+sgrCode TermDumb _ _ = ""
+sgrCode TermWin  _ _ = ""
+sgrCode t old new
   | old /= new && new == defaultStyleState = csi 'm' [0]
   | otherwise = csi 'm' $
     flag   styleBlink  5  ++
