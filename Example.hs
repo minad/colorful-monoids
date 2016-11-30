@@ -4,6 +4,8 @@ import System.Console.Style
 import Control.Monad.Trans
 import Data.Foldable
 import Text.Printf
+import Control.Monad.Trans.State.Strict
+import System.IO (stdout)
 
 ansiColors :: [Color]
 ansiColors = [ DefaultColor
@@ -104,6 +106,21 @@ applyStyleExample = runWithStyle [] $ do
   applyStyle                 -- Escape sequences generated
   liftIO $ putStrLn "Red"
 
+reduceExample :: IO ()
+reduceExample = do
+  for_ [0..255] $ \c -> do
+    flip evalStateT (hDefaultStyle stdout Term256) $ withStyle [BgColor $ Color256 c] $ liftIO $ printf "%02x" c
+    flip evalStateT (hDefaultStyle stdout Term8)   $ withStyle [BgColor $ Color256 c] $ liftIO $ printf "%02x" c
+    liftIO $ putChar '\n'
+  for_ [0,64..255] $ \r ->
+    for_ [0,64..255] $ \g ->
+      for_ [0,64..255] $ \b -> do
+        let c = RGB r g b
+        flip evalStateT (hDefaultStyle stdout TermRGB) $ withStyle [BgColor c] $ liftIO $ printf "%20s" $ show c
+        flip evalStateT (hDefaultStyle stdout Term256) $ withStyle [BgColor c] $ liftIO $ printf "%20s" $ show c
+        flip evalStateT (hDefaultStyle stdout Term8)   $ withStyle [BgColor c] $ liftIO $ printf "%20s" $ show c
+        liftIO $ putChar '\n'
+
 main :: IO ()
 main = do
   ansiColorsExample
@@ -114,3 +131,4 @@ main = do
   basicExample
   setStyleCodeExample
   applyStyleExample
+  reduceExample

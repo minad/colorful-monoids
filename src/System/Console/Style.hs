@@ -88,11 +88,11 @@ data Color
   | DullMagenta
   | DullCyan
   | DullWhite
-  | Color256 !Word8               -- ^ Color from 256 color scheme. Color is automatically degraded to 8 colors for older terminals.
-  | RGB      !Word8 !Word8 !Word8 -- ^ True color. Color is automatically degraded to 256 or 8 colors for older terminals.
+  | Color256 !Word8               -- ^ Color from 256 color scheme. Color is automatically reduced to 8 colors for less capable terminals.
+  | RGB      !Word8 !Word8 !Word8 -- ^ True color. Color is automatically reduced to 256 or 8 colors for less capable terminals.
   deriving (Eq, Ord, Show)
 
--- | Terminal type. For older terminals the style is automatically degraded.
+-- | Terminal type. For less capable terminals the color depth is automatically reduced.
 data Term
   = TermDumb -- ^ Dumb terminal - no color output
   | Term8    -- ^ 8 colors supported
@@ -293,7 +293,7 @@ reduceColor Term256  = reduceColor256
 reduceColor _        = id
 
 rgbToWord8 :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8
-rgbToWord8 base q r g b = base * (base * (b `div` q) + (g `div` q)) + (r `div` q)
+rgbToWord8 base q r g b = base * (base * (r `div` q) + (g `div` q)) + (b `div` q)
 
 gray24ToANSI :: Word8 -> Color
 gray24ToANSI x
@@ -304,8 +304,8 @@ gray24ToANSI x
 
 color216ToANSI :: Word8 -> Color
 color216ToANSI x = rgbToANSI 3 r g b
-  where (b,gr) = divMod x 36
-        (g,r)  = divMod gr 6
+  where (r,gb) = divMod x 36
+        (g,b)  = divMod gb 6
 
 color16ToANSI :: Word8 -> Color
 color16ToANSI 0  = DullBlack
@@ -332,7 +332,7 @@ squareNorm r g b = ri*ri + bi*bi * gi*gi
         bi = fromIntegral b
 
 rgbToANSI :: Word8 -> Word8 -> Word8 -> Word8 -> Color
-rgbToANSI q r g b = color16ToANSI $ bool 0 8 (squareNorm r g b >= squareNorm q q q) + rgbToWord8 2 q r g b
+rgbToANSI q r g b = color16ToANSI $ bool 0 8 (squareNorm r g b >= squareNorm q q q) + rgbToWord8 2 q b g r
 
 reduceColor8 :: Color -> Color
 reduceColor8 (Color256 x)
