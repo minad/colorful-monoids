@@ -14,8 +14,8 @@
 -- This makes it easy to use this library for a pretty printer with
 -- nested annotations, e.g., wl-pprint-console.
 --
--- Warning: Windows supports is currently not implemented, but
--- is planned (by using ansi-terminal or by directly using the ffi).
+-- Warning: Windows support is currently not implemented, but
+-- is planned (by using ansi-terminal or the ffi).
 --
 -- Example:
 --
@@ -65,8 +65,9 @@ import System.IO (Handle, stdout, hPutStr, hIsTerminalDevice)
 import System.Environment (getEnv)
 import Data.List.NonEmpty (NonEmpty(..))
 
+-- | Console color
 data Color
-  = DefaultColor
+  = DefaultColor                  -- ^ Default terminal color (terminal specific)
   | Black
   | Red
   | Green
@@ -83,31 +84,39 @@ data Color
   | DullMagenta
   | DullCyan
   | DullWhite
-  | Color256 !Word8
-  | RGB      !Word8 !Word8 !Word8
+  | Color256 !Word8               -- ^ Color from 256 color scheme. Color is automatically degraded to 8 colors for older terminals.
+  | RGB      !Word8 !Word8 !Word8 -- ^ True color. Color is automatically degraded to 256 or 8 colors for older terminals.
   deriving (Eq, Ord, Show)
 
-data Term = TermDumb | Term8 | Term256 | TermRGB | TermWin
+-- | Terminal type. For older terminals the style is automatically degraded.
+data Term
+  = TermDumb -- ^ Dumb terminal - no color output
+  | Term8    -- ^ 8 colors supported
+  | Term256  -- ^ 256 colors supported
+  | TermRGB  -- ^ True colors supported
+  | TermWin  -- ^ Windows terminal. Will use emulation (Not yet implemented).
   deriving (Eq, Show)
 
+-- | Style commands
 data SetStyle
-  = Bold
-  | NotBold
-  | Italic
-  | NotItalic
-  | Under
-  | NotUnder
-  | Invert
-  | NotInvert
-  | Save
-  | Restore
-  | Reset
-  | Blink
-  | NotBlink
+  = Bold           -- ^ Bold font
+  | NotBold        -- ^ Normal-weight font
+  | Italic         -- ^ Italic font
+  | NotItalic      -- ^ Non-italic font
+  | Under          -- ^ Underlined text
+  | NotUnder       -- ^ Text without underline
+  | Invert         -- ^ Invert foreground and background color
+  | NotInvert      -- ^ Deactivate color inversion
+  | Save           -- ^ Save style to stack
+  | Restore        -- ^ Restore style from stack
+  | Reset          -- ^ Reset to default style
+  | Blink          -- ^ Activate blinking
+  | NotBlink       -- ^ Deactivate blinking
   | FgColor !Color
   | BgColor !Color
   deriving (Eq, Ord, Show)
 
+-- | State accessor for the 'Style'
 class HasStyle s where
   getStyle :: s -> Style
   putStyle :: Style -> s -> s
@@ -116,6 +125,8 @@ instance HasStyle Style where
   getStyle = id
   putStyle = const
 
+-- | Abstract state datatype which keeps
+-- a stack of the applied styles.
 data Style = Style
   { styleStack  :: !(NonEmpty StyleState)
   , styleHandle :: !Handle
@@ -132,10 +143,10 @@ data StyleState = StyleState
   , styleBg     :: !Color
   } deriving (Eq, Ord, Show)
 
--- | The action @(hGetTerm handle)@ determines the terminal type of the file handle @handle@.
+-- | The action @(hGetTerm handle)@ determines the terminal type of the file @handle@.
 --
 -- The terminal type is determined by checking if the file handle points to a device
--- and by looking at the $TERM environment variable.
+-- and by looking at the @$TERM@ environment variable.
 hGetTerm :: MonadIO m => Handle -> m Term
 hGetTerm h = liftIO $ do
   term <- hIsTerminalDevice h
@@ -143,7 +154,7 @@ hGetTerm h = liftIO $ do
     then envToTerm  <$> getEnv "TERM"
     else pure TermDumb
 
--- | Determine the terminal type from the value of the $TERM environment variable.
+-- | Determine the terminal type from the value of the @$TERM@ environment variable.
 -- TODO improve this
 envToTerm :: String -> Term
 envToTerm "dumb" = TermDumb
@@ -152,10 +163,10 @@ envToTerm term | any (flip isPrefixOf term) rgbTerminals = TermRGB
                | otherwise = Term8
   where rgbTerminals = ["xterm", "konsole", "gnome", "st", "linux"]
 
--- | @(hDefaultStyle handle term) return the default (initial) style configured
+-- | @(hDefaultStyle handle term) return the default (initial) 'Style' configured
 -- with the file handle @handle@ and terminal type @term@.
 --
--- Every style has a single associated handle.
+-- Every 'Style' has a single associated handle.
 hDefaultStyle :: Handle -> Term -> Style
 hDefaultStyle h t = Style
   { styleStack  = pure defaultStyleState
@@ -163,7 +174,7 @@ hDefaultStyle h t = Style
   , styleTerm   = t
   }
 
--- | @(defaultStyle term)@ returns the default style configured with terminal type @term@.
+-- | The function @(defaultStyle term)@ returns the default 'Style' configured with terminal type @term@.
 defaultStyle :: Term -> Style
 defaultStyle = hDefaultStyle stdout
 
@@ -179,39 +190,39 @@ defaultStyleState = StyleState
   }
 
 -- | The action @(hRunStyle handle action)@ runs the 'StateT' monad transformer providing
--- the active style for the given @action@.
+-- the active 'Style' for the given @action@.
 hRunStyle :: MonadIO m => Handle -> StateT Style m a -> m a
 hRunStyle h x = hDefaultStyle h <$> hGetTerm h >>= evalStateT x
 
 -- | The action @(runStyle term action)@ runs the 'State' monad providing
--- the active style for the given @action@.
+-- the active 'Style' for the given @action@.
 runStyle :: Term -> State Style a -> a
 runStyle = flip evalState . defaultStyle
 
 -- | The action @(runWithStyle cmd action)@ runs the 'StateT' monad transformer providing
--- the active style for the given @action@.
+-- the active 'Style' for the given @action@.
 --
--- The output on 'stdout' within the @action@ is modified by the given style commands @cmd@.
--- The style is restored to the defaults afterwards.
+-- The output on 'stdout' within the @action@ is modified by the given 'StyleSet' commands @cmd@.
+-- The 'Style' is restored to the defaults afterwards.
 runWithStyle :: (MonadIO m, Foldable f) => f SetStyle -> StateT Style m a -> m a
 runWithStyle = hRunWithStyle stdout
 
 -- | The action @(hRunWithStyle handle cmd action)@ runs the 'StateT' monad transformer providing
--- the active style for the given @action@.
+-- the active 'Style' for the given @action@.
 --
--- The output on @handle@ within the @action@ is modified by the given style commands @cmd@.
--- The style is restored to the defaults afterwards.
+-- The output on @handle@ within the @action@ is modified by the given 'StyleSet' commands @cmd@.
+-- The 'Style' is restored to the defaults afterwards.
 hRunWithStyle :: (MonadIO m, Foldable f) => Handle -> f SetStyle -> StateT Style m a -> m a
 hRunWithStyle h style action = hRunStyle h $ withStyle style action
 
 -- | The function @(styleCode' style cmd)@ returns the modified style status and ANSI code
--- corresponding to the style commands @cmd@.
+-- corresponding to the 'StyleSet' commands @cmd@.
 styleCode' :: Foldable f => Style -> f SetStyle -> (Style, String)
 styleCode' style cmd = (style', sgrCode style style')
   where style' = updateStyle cmd style
 
--- | The action @(styleCode cmd)@ returns the ANSI code corresponding to the style commands @cmd@.
--- This action must be executed within a monadic context providing the current style status.
+-- | The action @(styleCode cmd)@ returns the ANSI code corresponding to the 'StyleSet' commands @cmd@.
+-- This action must be executed within a monadic context providing the active 'Style'.
 styleCode :: (MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m String
 styleCode cmd = do
   style <- gets getStyle
@@ -219,7 +230,7 @@ styleCode cmd = do
   modify $ putStyle style'
   pure str
 
--- | The action @(setStyle cmd)@ modifies the current style by executing the style commands @cmd@.
+-- | The action @(setStyle cmd)@ modifies the active 'Style' by executing the 'StyleSet' commands @cmd@.
 setStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m ()
 setStyle cmd = do
   style <- gets getStyle
@@ -227,10 +238,10 @@ setStyle cmd = do
   liftIO $ hPutStr (styleHandle style) $ sgrCode style style'
   modify $ putStyle style'
 
--- | The action @(withStyle cmd action)@ executes the @action@ with the current style modified
--- by the style commands @cmd@.
+-- | The action @(withStyle cmd action)@ executes the @action@ with the active 'Style' modified
+-- by the 'StyleSet' commands @cmd@.
 --
--- The style is restored to the previously active style afterwards.
+-- The style is restored to the previous 'Style' afterwards.
 withStyle :: (MonadIO m, MonadState s m, HasStyle s, Foldable f) => f SetStyle -> m a -> m a
 withStyle cmd action = do
   setStyle (Save : toList cmd)
