@@ -355,7 +355,8 @@ sgrCode :: Term -> StyleState -> StyleState -> String
 sgrCode TermDumb _ _ = ""
 sgrCode TermWin  _ _ = ""
 sgrCode t old new
-  | old /= new && new == defaultStyleState = csi 'm' [0]
+  | old == new = ""
+  | new == defaultStyleState = csi 'm' []
   | otherwise = csi 'm' $
     flag   styleBlink  5  ++
     flag   styleBold   1  ++
