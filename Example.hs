@@ -97,6 +97,13 @@ setStyleCodeExample = runStyleT Term8 $ do
   end <- setStyleCode [Reset]
   liftIO $ putStrLn (start ++ "Green" ++ end)
 
+applyStyleExample :: IO ()
+applyStyleExample = runWithStyle [] $ do
+  changeStyle [FgColor Blue] -- No escape sequence generated
+  changeStyle [FgColor Red]
+  applyStyle                 -- Escape sequences generated
+  liftIO $ putStrLn "Red"
+
 main :: IO ()
 main = do
   ansiColorsExample
@@ -106,3 +113,4 @@ main = do
   stackExample
   basicExample
   setStyleCodeExample
+  applyStyleExample
