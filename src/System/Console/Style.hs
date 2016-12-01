@@ -163,7 +163,7 @@ hGetTerm h = liftIO $ do
 -- TODO improve this
 envToTerm :: String -> Term
 envToTerm "dumb" = TermDumb
-envToTerm term | any (flip isPrefixOf term) rgbTerminals = TermRGB
+envToTerm term | any (`isPrefixOf` term) rgbTerminals = TermRGB
                | "256" `isInfixOf` term = Term256
                | otherwise = Term8
   where rgbTerminals = ["xterm", "konsole", "gnome", "st", "linux"]
