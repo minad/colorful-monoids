@@ -11,11 +11,6 @@ license: MIT
 github: minad/console-style
 
 tested-with:
-  GHC == 7.0.4,
-  GHC == 7.2.2,
-  GHC == 7.4.2,
-  GHC == 7.6.3,
-  GHC == 7.8.4,
   GHC == 7.10.3,
   GHC == 8.0.1
 
@@ -23,7 +18,7 @@ ghc-options:
 - -Wall
 
 dependencies:
-- base         < 5
+- base         >= 4.8 && < 5
 - transformers >= 0.4 && < 0.6
 - mtl          >= 2.2 && < 2.4
 - semigroups   >= 0.9 && < 1
