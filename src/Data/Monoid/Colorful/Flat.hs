@@ -60,7 +60,7 @@ data Colored a
   deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic, Generic1)
 
 hPrintColoredIO :: Handle -> Term -> [Colored (IO ())] -> IO ()
-hPrintColoredIO h = showColored id (hPutStr h)
+hPrintColoredIO h = showColoredA id (hPutStr h)
 
 printColoredIO :: Term -> [Colored (IO ())] -> IO ()
 printColoredIO = hPrintColoredIO stdout
@@ -72,7 +72,7 @@ printColored :: (a -> IO ()) -> Term -> [Colored a] -> IO ()
 printColored f = hPrintColored (const f) stdout
 
 hPrintColoredS :: Handle -> Term -> [Colored String] -> IO ()
-hPrintColoredS h = showColored (hPutStr h) (hPutStr h)
+hPrintColoredS h = showColoredA (hPutStr h) (hPutStr h)
 
 printColoredS :: Term -> [Colored String] -> IO ()
 printColoredS = hPrintColoredS stdout
