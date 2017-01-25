@@ -33,6 +33,7 @@ import GHC.Generics (Generic, Generic1)
 import qualified Data.Monoid.Colorful.Flat as Flat
 import Control.Monad (ap)
 
+-- | Colored Monoid
 data Colored a
   = Nil
   | Value a
@@ -43,10 +44,12 @@ data Colored a
   | Pair    (Colored a) (Colored a)
   deriving (Eq, Ord, Show, Read, Functor, Foldable, Traversable, Generic, Generic1)
 
+-- | Free monad!
 instance Applicative Colored where
   pure = Value
   (<*>) = ap
 
+-- | Free monad!
 instance Monad Colored where
   Nil         >>= _ = Nil
   Value     x >>= f = f x
@@ -69,6 +72,9 @@ instance IsList (Colored a) where
   fromList = foldr Pair Nil
   toList   = (:[]) -- TODO, invalid
 
+-- | Flatten the Monoid @Colored a@ and return @[Flat.Colored a]@
+--
+-- This function is used internally for rendering the Colored monoids.
 flatten :: Colored a -> [Flat.Colored a]
 flatten s = go s []
   where go (Value   a)      = (Flat.Value a:)

@@ -29,25 +29,34 @@
 -- >   putChar '\n'
 --
 -- For many more examples, see the
--- <https://github.com/minad/colored-monoids/blob/master/example.hs example.hs> file.
+-- <https://github.com/minad/colorful-monoids/blob/master/example.hs example.hs> file.
 -----------------------------------------------------------
 
 module Data.Monoid.Colorful (
-  Style(..)
+  -- * The Monoid
+  Colored(..)
+  , Style(..)
   , Color(..)
+
+  -- * Terminal type
   , Term(..)
-  , Colored(..)
   , hGetTerm
   , getTerm
+
+  -- ** Colorful printing to file handle
   , hPrintColored
   , printColored
   , hPrintColoredIO
   , printColoredIO
   , hPrintColoredS
   , printColoredS
+
+  -- ** Show with ANSI escape sequences
   , showColored
   , showColoredA
   , showColoredS
+
+  -- * Reexport from Data.Semigroup
   , (<>)
 ) where
 

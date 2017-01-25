@@ -22,21 +22,30 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Data.Monoid.Colorful.Flat (
-  Style(..)
+  -- * Colored datatypes
+  Colored(..)
+  , Style(..)
   , Color(..)
+
+  -- * Terminal type
   , Term(..)
-  , Colored(..)
   , hGetTerm
   , getTerm
+
+  -- ** Colorful printing to file handle
   , hPrintColored
   , printColored
   , hPrintColoredIO
   , printColoredIO
   , hPrintColoredS
   , printColoredS
+
+  -- ** Show with ANSI escape sequences
   , showColored
   , showColoredA
   , showColoredS
+
+  -- * Reexport from Data.Semigroup
   , (<>)
 ) where
 
