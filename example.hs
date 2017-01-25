@@ -4,7 +4,6 @@ module Main where
 import Data.Monoid.Colorful
 import Data.Foldable
 import Text.Printf
-import Data.Monoid ((<>))
 
 ansiColors :: [Color]
 ansiColors = [ DefaultColor
@@ -31,14 +30,14 @@ ansiColorsExample = do
   term <- getTerm
   printColoredS term $ Style Under $ Style Bold "ANSI Example\n"
   for_ ansiColors $ \c -> do
-    printColoredIO term $ Bg c $ Value $ printf "%-15s" $ show c
-    printColoredIO term $ Fg c $ Value $ printf "%-15s" $ show c
-    printColoredIO term $ Bg c $ Style Invert $ Value $ printf " %-15s" $ show c
-    printColoredIO term $ Fg c $ Style Invert $ Value $ printf " %-15s" $ show c
-    printColoredS term $ Bg c $ Value $ printf "%-15s" $ show c
-    printColoredS term $ Fg c $ Value $ printf "%-15s" $ show c
-    printColoredS term $ Bg c $ Style Invert $ Value $ printf " %-15s" $ show c
-    printColoredS term $ Fg c $ Style Invert $ Value $ printf " %-15s" $ show c
+    printColoredIO term $ Bg c (Value $ printf "%-15s" $ show c)
+      <> Fg c (Value $ printf "%-15s" $ show c)
+      <> Bg c (Style Invert $ Value $ printf " %-15s" $ show c)
+      <> Fg c (Style Invert $ Value $ printf " %-15s" $ show c)
+    printColoredS term $ Bg c (Value $ printf "%-15s" $ show c)
+      <> Fg c (Value $ printf "%-15s" $ show c)
+      <> Bg c (Style Invert $ Value $ printf " %-15s" $ show c)
+      <> Fg c (Style Invert $ Value $ printf " %-15s" $ show c)
     putChar '\n'
 
 colors256Example :: IO ()
@@ -46,10 +45,10 @@ colors256Example = do
   term <- getTerm
   printColoredS term $ Style Under $ Style Bold "Color256 Example\n"
   for_ [0..255] $ \c -> do
-    printColoredS term $ Bg (Color256 c) $ Value $ printf "%02x" c
-    printColoredS term $ Fg (Color256 c) $ Value $ printf " %02x" c
-    printColoredS term $ Bg (Color256 c) $ Style Invert $ Value $ printf " %02x" c
-    printColoredS term $ Fg (Color256 c) $ Style Invert $ Value $ printf " %02x" c
+    printColoredS term $ Bg (Color256 c) (Value $ printf "%02x" c)
+      <> Fg (Color256 c) (Value $ printf " %02x" c)
+      <> Bg (Color256 c) (Style Invert $ Value $ printf " %02x" c)
+      <> Fg (Color256 c) (Style Invert $ Value $ printf " %02x" c)
     putChar '\n'
 
 rgbExample :: IO ()
@@ -60,10 +59,10 @@ rgbExample = do
     for_ [0,64..255] $ \g ->
       for_ [0,64..255] $ \b -> do
         let c = RGB r g b
-        printColoredS term $ Bg c $ Value $ printf "%-20s" $ show c
-        printColoredS term $ Fg c $ Value $ printf " %-20s" $ show c
-        printColoredS term $ Bg c $ Style Invert $ Value $ printf " %-20s" $ show c
-        printColoredS term $ Fg c $ Style Invert $ Value $ printf " %-20s" $ show c
+        printColoredS term $ Bg c (Value $ printf "%-20s" $ show c)
+          <> Fg c (Value $ printf " %-20s" $ show c)
+          <> Bg c (Style Invert $ Value $ printf " %-20s" $ show c)
+          <> Fg c (Style Invert $ Value $ printf " %-20s" $ show c)
         putChar '\n'
 
 specialExample :: IO ()
@@ -80,8 +79,7 @@ specialExample = do
 stackExample :: IO ()
 stackExample = do
   term <- getTerm
-  printColoredS term $ Style Under $ Style Bold "Stack Example\n"
-  printColoredS term $ loop 0
+  printColoredS term $ Style Under (Style Bold "Stack Example\n") <> loop 0
   putChar '\n'
   where
     loop 8 = mempty
@@ -94,10 +92,10 @@ stackExample = do
 basicExample :: IO ()
 basicExample = do
   term <- getTerm
-  printColoredS term $ Style Under $ Style Bold "Basic Example\n"
-  printColoredS term $ Style Bold "Bold"
-  printColoredS term $ Style Italic $ Bg Red "Italic Red"
-  printColoredS term $ Style Under "Under"
+  printColoredS term $ Style Under (Style Bold "Basic Example\n")
+    <> Style Bold "Bold"
+    <> Style Italic (Bg Red "Italic Red")
+    <> Style Under "Under"
   putChar '\n'
 
 reduceExample :: IO ()

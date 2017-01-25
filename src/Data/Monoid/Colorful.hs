@@ -21,12 +21,12 @@
 --
 -- > basicExample :: IO ()
 -- > basicExample = do
--- >  term <- getTerm
--- >  printColoredS term $ Style Under $ Style Bold "Basic Example\n"
--- >  printColoredS term $ Style Bold "Bold"
--- >  printColoredS term $ Style Italic $ Bg Red "Italic Red"
--- >  printColoredS term $ Style Under "Under"
--- >  putChar '\n'
+-- >   term <- getTerm
+-- >   printColoredS term $ Style Under (Style Bold "Basic Example\n")
+-- >     <> Style Bold "Bold"
+-- >     <> Style Italic (Bg Red "Italic Red")
+-- >     <> Style Under "Under"
+-- >   putChar '\n'
 --
 -- For many more examples, see the
 -- <https://github.com/minad/colored-monoids/blob/master/example.hs example.hs> file.
@@ -48,6 +48,8 @@ module Data.Monoid.Colorful (
   , showColored
   , showColoredA
   , showColoredS
+  , (<>)
 ) where
 
 import Data.Monoid.Colorful.Nested
+import Data.Semigroup ((<>))

@@ -37,6 +37,7 @@ module Data.Monoid.Colorful.Flat (
   , showColored
   , showColoredA
   , showColoredS
+  , (<>)
 ) where
 
 import System.IO (Handle, stdout, hPutStr)
@@ -47,6 +48,7 @@ import Data.Monoid.Colorful.SGR
 import Data.Functor.Identity
 import Data.Bifunctor (first, second)
 import GHC.Generics (Generic, Generic1)
+import Data.Semigroup ((<>))
 
 data Colored a
   = Value a
