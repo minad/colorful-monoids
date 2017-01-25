@@ -1,7 +1,7 @@
-# console-style: Styled console text output using ANSI escape sequences
+# colorful-monoids: Styled console text output using ANSI escape sequences
 
-[![Hackage](https://img.shields.io/hackage/v/console-style.svg)](https://hackage.haskell.org/package/console-style)
-[![Build Status](https://secure.travis-ci.org/minad/console-style.png?branch=master)](http://travis-ci.org/minad/console-style)
+[![Hackage](https://img.shields.io/hackage/v/colorful-monoids.svg)](https://hackage.haskell.org/package/colorful-monoids)
+[![Build Status](https://secure.travis-ci.org/minad/colorful-monoids.png?branch=master)](http://travis-ci.org/minad/colorful-monoids)
 
-* Hackage: https://hackage.haskell.org/package/console-style
+* Hackage: https://hackage.haskell.org/package/colorful-monoids
 

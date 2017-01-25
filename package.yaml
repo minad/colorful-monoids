@@ -1,4 +1,4 @@
-name: console-style
+name: colorful-monoids
 version: 0.0.2.1
 category: Text, User Interfaces, Monad
 description: Styled console text output using ANSI escape sequences.
@@ -6,9 +6,9 @@ synopsis: Styled console text output using ANSI escape sequences.
 stability: experimental
 author: Daniel Mendler <mail@daniel-mendler.de>
 maintainer: Daniel Mendler <mail@daniel-mendler.de>
-copyright: 2016 Daniel Mendler
+copyright: 2017 Daniel Mendler
 license: MIT
-github: minad/console-style
+github: minad/colorful-monoids
 
 tested-with:
   GHC == 7.10.3,
@@ -18,9 +18,7 @@ ghc-options:
 - -Wall
 
 dependencies:
-- base         >= 4.8 && < 5
-- transformers >= 0.4 && < 0.6
-- mtl          >= 2.2 && < 2.4
+- base >= 4.8 && < 5
 
 when:
   - condition: impl(ghc < 8.0)
@@ -28,3 +26,12 @@ when:
 
 library:
   source-dirs: src
+  exposed-modules:
+    - Data.Monoid.Colorful
+    - Data.Monoid.Colorful.Flat
+
+tests:
+  example:
+    main: example.hs
+    dependencies:
+    - colorful-monoids
