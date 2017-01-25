@@ -77,8 +77,8 @@ hPrintColoredS h = showColored (hPutStr h) (hPutStr h)
 printColoredS :: Term -> [Colored String] -> IO ()
 printColoredS = hPrintColoredS stdout
 
-showColoredS :: Term -> [Colored String] -> String
-showColoredS = showColored id id
+showColoredS :: Term -> [Colored String] -> ShowS
+showColoredS = showColored (++) (++)
 
 showColored :: Monoid o => (a -> o) -> (SGRCode -> o) -> Term -> [Colored a] -> o
 showColored str code term flat = runIdentity $ showColoredA (pure . str) (pure . code) term flat

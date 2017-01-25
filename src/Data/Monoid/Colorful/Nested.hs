@@ -103,5 +103,5 @@ showColoredA f g t = Flat.showColoredA f g t . flatten
 showColored :: Monoid o => (a -> o) -> (SGRCode -> o) -> Term -> Colored a -> o
 showColored f g t = Flat.showColored f g t . flatten
 
-showColoredS :: Term -> Colored String -> String
+showColoredS :: Term -> Colored String -> ShowS
 showColoredS t = Flat.showColoredS t . flatten
