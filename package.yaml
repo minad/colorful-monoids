@@ -1,5 +1,5 @@
 name: colorful-monoids
-version: 0.1.0.0
+version: 0.1.0.1
 category: Text, User Interfaces, Monad
 description: Styled console text output using ANSI escape sequences.
 synopsis: Styled console text output using ANSI escape sequences.
