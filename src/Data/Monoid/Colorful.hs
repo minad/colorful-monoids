@@ -9,10 +9,17 @@
 -- Portability :  portable
 --
 -- This library provides styled text output using ANSI
--- escape sequences. The main feature is that the library
--- keeps track of a stack of the active styles using a state monad.
--- This makes it easy to use this library for a pretty printer with
--- nested annotations, e.g., wl-pprint-console.
+-- escape sequences. The colored text is modeled
+-- as nested Colored values, which form a Monoid.
+-- As a result the colored code has a relatively concise form.
+--
+-- For rendering, the Colored Monoid is flattended and
+-- then printed out. The library keeps track of a stack of the active
+-- styles internally, such that correct and minimal escape sequences are generated.
+--
+-- This library is used by
+-- <https://hackage.haskell.org/package/wl-pprint-console wl-pprint-console>,
+-- which is a pretty printer with support for annotations.
 --
 -- Warning: Windows support is currently not implemented, but
 -- is planned (by using ansi-terminal or the ffi).
