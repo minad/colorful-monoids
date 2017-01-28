@@ -106,3 +106,5 @@ showColoredA str code term = go (defaultSettings, (defaultSettings, []))
         go s (Value   a:b) = let (old, stack@(new, _)) = s in
           mappend <$> (mappend <$> code (sgrCode term old new) <*> str a) <*> go (new, stack) b
         go s [] = let (old, (new, _)) = s in code (sgrCode term old new)
+{-# SPECIALIZE showColoredA :: Monoid o => (a -> Identity o) -> (SGRCode -> Identity o) -> Term -> [Colored a] -> Identity o #-}
+{-# SPECIALIZE showColoredA :: Monoid o => (a -> (o -> o)) -> (SGRCode -> (o -> o)) -> Term -> [Colored a] -> (o -> o) #-}
