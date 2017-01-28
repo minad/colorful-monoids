@@ -10,7 +10,7 @@ import Data.Monoid.Colorful.Color
 data Settings = Settings
   { settingBold   :: !Bool
   , settingItalic :: !Bool
-  , settingUnder  :: !Bool
+  , settingUnderline  :: !Bool
   , settingInvert :: !Bool
   , settingBlink  :: !Bool
   , settingFg     :: !Color
@@ -21,21 +21,21 @@ type SettingsStack = (Settings, [Settings])
 
 defaultSettings :: Settings
 defaultSettings = Settings
-  { settingBold   = False
-  , settingItalic = False
-  , settingInvert = False
-  , settingUnder  = False
-  , settingBlink  = False
-  , settingFg     = DefaultColor
-  , settingBg     = DefaultColor
+  { settingBold      = False
+  , settingItalic    = False
+  , settingInvert    = False
+  , settingUnderline = False
+  , settingBlink     = False
+  , settingFg        = DefaultColor
+  , settingBg        = DefaultColor
   }
 
 setStyle :: Style -> Bool -> Settings -> Settings
-setStyle Bold   b s = s { settingBold   = b }
-setStyle Italic b s = s { settingItalic = b }
-setStyle Under  b s = s { settingUnder  = b }
-setStyle Invert b s = s { settingInvert = b }
-setStyle Blink  b s = s { settingBlink  = b }
+setStyle Bold      b s = s { settingBold      = b }
+setStyle Italic    b s = s { settingItalic    = b }
+setStyle Underline b s = s { settingUnderline = b }
+setStyle Invert    b s = s { settingInvert    = b }
+setStyle Blink     b s = s { settingBlink     = b }
 {-# INLINE setStyle #-}
 
 setBg, setFg :: Color -> Settings -> Settings

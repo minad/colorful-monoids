@@ -28,7 +28,7 @@ ansiColors = [ DefaultColor
 ansiColorsExample :: IO ()
 ansiColorsExample = do
   term <- getTerm
-  printColoredS term $ Style Under $ Style Bold "ANSI Example\n"
+  printColoredS term $ Style Underline $ Style Bold "ANSI Example\n"
   for_ ansiColors $ \c -> do
     printColoredIO term $ Bg c (Value $ printf "%-15s" $ show c)
       <> Fg c (Value $ printf "%-15s" $ show c)
@@ -43,7 +43,7 @@ ansiColorsExample = do
 colors256Example :: IO ()
 colors256Example = do
   term <- getTerm
-  printColoredS term $ Style Under $ Style Bold "Color256 Example\n"
+  printColoredS term $ Style Underline $ Style Bold "Color256 Example\n"
   for_ [0..255] $ \c -> do
     printColoredS term $ Bg (Color256 c) (Value $ printf "%02x" c)
       <> Fg (Color256 c) (Value $ printf " %02x" c)
@@ -54,7 +54,7 @@ colors256Example = do
 rgbExample :: IO ()
 rgbExample = do
   term <- getTerm
-  printColoredS term $ Style Under $ Style Bold "RGB Example\n"
+  printColoredS term $ Style Underline $ Style Bold "RGB Example\n"
   for_ [0,64..255] $ \r ->
     for_ [0,64..255] $ \g ->
       for_ [0,64..255] $ \b -> do
@@ -68,8 +68,8 @@ rgbExample = do
 specialExample :: IO ()
 specialExample = do
   term <- getTerm
-  printColoredS term $ Style Under $ Style Bold "Special Example\n"
-  for_ [Bold,Italic,Under,Invert,Blink] $ \a -> do
+  printColoredS term $ Style Underline $ Style Bold "Special Example\n"
+  for_ [Bold,Italic,Underline,Invert,Blink] $ \a -> do
     printColoredS term $
       Style a (Value (printf "%-20s" $ show a) <>
                Unstyle a (Value $ printf " %-20s" $ "Not" ++ show a) <>
@@ -79,7 +79,7 @@ specialExample = do
 stackExample :: IO ()
 stackExample = do
   term <- getTerm
-  printColoredS term $ Style Under (Style Bold "Stack Example\n") <> loop 0
+  printColoredS term $ Style Underline (Style Bold "Stack Example\n") <> loop 0
   putChar '\n'
   where
     loop 8 = mempty
@@ -92,15 +92,15 @@ stackExample = do
 basicExample :: IO ()
 basicExample = do
   term <- getTerm
-  printColoredS term $ Style Under (Style Bold "Basic Example\n")
+  printColoredS term $ Style Underline (Style Bold "Basic Example\n")
     <> Style Bold "Bold"
     <> Style Italic (Bg Red "Italic Red")
-    <> Style Under "Under"
+    <> Style Underline "Underline"
   putChar '\n'
 
 reduceExample :: IO ()
 reduceExample = do
-  printColoredS Term8 $ Style Under $ Style Bold "Reduction Example\n"
+  printColoredS Term8 $ Style Underline $ Style Bold "Reduction Example\n"
   for_ [0..255] $ \c -> do
     printColoredS Term256 $ Bg (Color256 c) $ Value $ printf "%02x" c
     printColoredS Term8   $ Bg (Color256 c) $ Value $ printf "%02x" c

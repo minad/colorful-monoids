@@ -13,11 +13,11 @@ import GHC.Generics (Generic)
 
 -- | Rendering style
 data Style
-  = Bold     -- ^ Bold font
-  | Italic   -- ^ Italic font
-  | Under    -- ^ Underlined text
-  | Invert   -- ^ Invert foreground and background color
-  | Blink    -- ^ Blinking
+  = Bold       -- ^ Bold font
+  | Italic     -- ^ Italic font
+  | Underline  -- ^ Underlined text
+  | Invert     -- ^ Invert foreground and background color
+  | Blink      -- ^ Blinking
   deriving (Eq, Ord, Show, Read, Enum, Bounded, Generic)
 
 -- | Named colors, 256 and RGB colors for more capable terminals.

@@ -25,13 +25,13 @@ sgrCode t old new
   | old == new = ""
   | new == defaultSettings = csi 'm' []
   | otherwise = csi 'm' $
-                (flag  settingBlink  5 .
-                 flag  settingBold   1 .
-                 flag  settingItalic 3 .
-                 flag  settingUnder  4 .
-                 flag  settingInvert 7 .
-                 color settingFg     0 .
-                 color settingBg     10) []
+                (flag  settingBlink     5 .
+                 flag  settingBold      1 .
+                 flag  settingItalic    3 .
+                 flag  settingUnderline 4 .
+                 flag  settingInvert    7 .
+                 color settingFg        0 .
+                 color settingBg        10) []
 
   where
 

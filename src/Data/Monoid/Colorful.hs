@@ -29,10 +29,10 @@
 -- > basicExample :: IO ()
 -- > basicExample = do
 -- >   term <- getTerm
--- >   printColoredS term $ Style Under (Style Bold "Basic Example\n")
+-- >   printColoredS term $ Style Underline (Style Bold "Basic Example\n")
 -- >     <> Style Bold "Bold"
 -- >     <> Style Italic (Bg Red "Italic Red")
--- >     <> Style Under "Under"
+-- >     <> Style Underline "Underline"
 -- >   putChar '\n'
 --
 -- For many more examples, see the
