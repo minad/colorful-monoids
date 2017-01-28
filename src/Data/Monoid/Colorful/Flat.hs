@@ -94,6 +94,7 @@ showColoredS = showColored (++) (++)
 
 showColored :: (Foldable f, Monoid o) => (a -> o) -> (SGRCode -> o) -> Term -> f (Colored a) -> o
 showColored str code term flat = runIdentity $ showColoredM (pure . str) (pure . code) term flat
+{-# SPECIALIZE showColored :: Monoid o => (a -> o) -> (SGRCode -> o) -> Term -> [Colored a] -> o #-}
 
 showColoredM :: (Foldable f, Monad m, Monoid o) => (a -> m o) -> (SGRCode -> m o) -> Term -> f (Colored a) -> m o
 showColoredM str code term list = do
@@ -111,6 +112,8 @@ showColoredM str code term list = do
           !y <- str a
           let !z = x `mappend` y
           pure $ s { stateStr = stateStr s `mappend` z, stateActive = fst $ stateStack s }
+{-# SPECIALIZE showColoredM :: (Foldable f, Monoid o) => (a -> Identity o) -> (SGRCode -> Identity o) -> Term -> f (Colored a) -> Identity o #-}
+{-# SPECIALIZE showColoredM :: (Foldable f, Monoid o) => (a -> (o -> o)) -> (SGRCode -> (o -> o)) -> Term -> f (Colored a) -> (o -> o) #-}
 {-# SPECIALIZE showColoredM :: Monoid o => (a -> Identity o) -> (SGRCode -> Identity o) -> Term -> [Colored a] -> Identity o #-}
 {-# SPECIALIZE showColoredM :: Monoid o => (a -> (o -> o)) -> (SGRCode -> (o -> o)) -> Term -> [Colored a] -> (o -> o) #-}
 

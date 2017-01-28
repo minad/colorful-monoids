@@ -20,10 +20,6 @@ ghc-options:
 dependencies:
 - base >= 4.8 && < 5
 
-when:
-  - condition: impl(ghc < 8.0)
-    dependencies: semigroups >= 0.9 && < 1
-
 library:
   source-dirs: src
   exposed-modules:
