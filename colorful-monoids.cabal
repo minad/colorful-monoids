@@ -29,6 +29,9 @@ library
   ghc-options: -Wall
   build-depends:
       base >= 4.8 && < 5
+  if impl(ghc < 8.0)
+    build-depends:
+        semigroups >= 0.9 && < 1
   exposed-modules:
       Data.Monoid.Colorful
       Data.Monoid.Colorful.Flat
@@ -49,4 +52,7 @@ test-suite example
   build-depends:
       base >= 4.8 && < 5
     , colorful-monoids
+  if impl(ghc < 8.0)
+    build-depends:
+        semigroups >= 0.9 && < 1
   default-language: Haskell2010
