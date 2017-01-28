@@ -3,7 +3,7 @@
 -- see: https://github.com/sol/hpack
 
 name:           colorful-monoids
-version:        0.2.0.0
+version:        0.2.0.1
 synopsis:       Styled console text output using ANSI escape sequences.
 description:    Styled console text output using ANSI escape sequences.
 category:       Text, User Interfaces, Monad
