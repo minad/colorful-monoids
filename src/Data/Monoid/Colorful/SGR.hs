@@ -23,13 +23,13 @@ sgrCode t old new
   | old == new = ""
   | new == defaultSettings = csi 'm' []
   | otherwise = csi 'm' $
-    flag  styleBlink  5  ++
-    flag  styleBold   1  ++
-    flag  styleItalic 3  ++
-    flag  styleUnder  4  ++
-    flag  styleInvert 7  ++
-    color styleFg     0  ++
-    color styleBg     10
+    flag  settingBlink  5  ++
+    flag  settingBold   1  ++
+    flag  settingItalic 3  ++
+    flag  settingUnder  4  ++
+    flag  settingInvert 7  ++
+    color settingFg     0  ++
+    color settingBg     10
 
   where
 

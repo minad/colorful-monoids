@@ -60,7 +60,7 @@ module Data.Monoid.Colorful (
 
   -- ** Show with ANSI escape sequences
   , showColored
-  , showColoredA
+  , showColoredM
   , showColoredS
 
   -- * Reexport from Data.Semigroup

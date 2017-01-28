@@ -18,7 +18,7 @@ module Data.Monoid.Colorful.Nested (
   , hPrintColoredS
   , printColoredS
   , showColored
-  , showColoredA
+  , showColoredM
   , showColoredS
 ) where
 
@@ -103,8 +103,8 @@ hPrintColoredS h t = Flat.hPrintColoredS h t . flatten
 printColoredS :: Term -> Colored String -> IO ()
 printColoredS t = Flat.printColoredS t . flatten
 
-showColoredA :: (Applicative f, Monoid o) => (a -> f o) -> (SGRCode -> f o) -> Term -> Colored a -> f o
-showColoredA f g t = Flat.showColoredA f g t . flatten
+showColoredM :: (Monad f, Monoid o) => (a -> f o) -> (SGRCode -> f o) -> Term -> Colored a -> f o
+showColoredM f g t = Flat.showColoredM f g t . flatten
 
 showColored :: Monoid o => (a -> o) -> (SGRCode -> o) -> Term -> Colored a -> o
 showColored f g t = Flat.showColored f g t . flatten

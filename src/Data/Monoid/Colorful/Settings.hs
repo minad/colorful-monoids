@@ -8,41 +8,47 @@ module Data.Monoid.Colorful.Settings (
 import Data.Monoid.Colorful.Color
 
 data Settings = Settings
-  { styleBold   :: !Bool
-  , styleItalic :: !Bool
-  , styleUnder  :: !Bool
-  , styleInvert :: !Bool
-  , styleBlink  :: !Bool
-  , styleFg     :: !Color
-  , styleBg     :: !Color
+  { settingBold   :: !Bool
+  , settingItalic :: !Bool
+  , settingUnder  :: !Bool
+  , settingInvert :: !Bool
+  , settingBlink  :: !Bool
+  , settingFg     :: !Color
+  , settingBg     :: !Color
   } deriving (Eq)
 
 type SettingsStack = (Settings, [Settings])
 
 defaultSettings :: Settings
 defaultSettings = Settings
-  { styleBold   = False
-  , styleItalic = False
-  , styleInvert = False
-  , styleUnder  = False
-  , styleBlink  = False
-  , styleFg     = DefaultColor
-  , styleBg     = DefaultColor
+  { settingBold   = False
+  , settingItalic = False
+  , settingInvert = False
+  , settingUnder  = False
+  , settingBlink  = False
+  , settingFg     = DefaultColor
+  , settingBg     = DefaultColor
   }
 
 setStyle :: Style -> Bool -> Settings -> Settings
-setStyle Bold   b s = s { styleBold   = b }
-setStyle Italic b s = s { styleItalic = b }
-setStyle Under  b s = s { styleUnder  = b }
-setStyle Invert b s = s { styleInvert = b }
-setStyle Blink  b s = s { styleBlink  = b }
+setStyle Bold   b s = s { settingBold   = b }
+setStyle Italic b s = s { settingItalic = b }
+setStyle Under  b s = s { settingUnder  = b }
+setStyle Invert b s = s { settingInvert = b }
+setStyle Blink  b s = s { settingBlink  = b }
+{-# INLINE setStyle #-}
 
 setBg, setFg :: Color -> Settings -> Settings
-setBg c s = s { styleBg = c }
-setFg c s = s { styleFg = c }
+setBg c s = s { settingBg = c }
+setFg c s = s { settingFg = c }
+{-# INLINE setBg #-}
+{-# INLINE setFg #-}
 
 resetStack, pushStack, popStack :: SettingsStack -> SettingsStack
 resetStack (_, ys)     = (defaultSettings, ys)
 pushStack  (y, ys)     = (y, y:ys)
 popStack   (_, [])     = (defaultSettings, [])
 popStack   (_, z : zs) = (z, zs)
+{-# INLINE resetStack #-}
+{-# INLINE pushStack #-}
+{-# INLINE popStack #-}

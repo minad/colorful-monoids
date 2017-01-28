@@ -20,6 +20,7 @@
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Data.Monoid.Colorful.Flat (
   -- * Colored datatypes
@@ -42,7 +43,7 @@ module Data.Monoid.Colorful.Flat (
 
   -- ** Show with ANSI escape sequences
   , showColored
-  , showColoredA
+  , showColoredM
   , showColoredS
 
   -- * Reexport from Data.Semigroup
@@ -55,9 +56,9 @@ import Data.Monoid.Colorful.Settings
 import Data.Monoid.Colorful.Color
 import Data.Monoid.Colorful.SGR
 import Data.Functor.Identity
-import Data.Bifunctor (first, second)
 import GHC.Generics (Generic, Generic1)
 import Data.Semigroup ((<>))
+import Data.Foldable (foldlM)
 
 data Colored a
   = Value a
@@ -71,40 +72,54 @@ data Colored a
   deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic, Generic1)
 
 hPrintColoredIO :: Handle -> Term -> [Colored (IO ())] -> IO ()
-hPrintColoredIO h = showColoredA id (hPutStr h)
+hPrintColoredIO h = showColoredM id (hPutStr h)
 
 printColoredIO :: Term -> [Colored (IO ())] -> IO ()
 printColoredIO = hPrintColoredIO stdout
 
-hPrintColored :: (Handle -> a -> IO ()) -> Handle -> Term -> [Colored a] -> IO ()
-hPrintColored f h = showColoredA (f h) (hPutStr h)
+hPrintColored :: Foldable f => (Handle -> a -> IO ()) -> Handle -> Term -> f (Colored a) -> IO ()
+hPrintColored f h = showColoredM (f h) (hPutStr h)
 
-printColored :: (a -> IO ()) -> Term -> [Colored a] -> IO ()
+printColored :: Foldable f => (a -> IO ()) -> Term -> f (Colored a) -> IO ()
 printColored f = hPrintColored (const f) stdout
 
-hPrintColoredS :: Handle -> Term -> [Colored String] -> IO ()
-hPrintColoredS h = showColoredA (hPutStr h) (hPutStr h)
+hPrintColoredS :: Foldable f => Handle -> Term -> f (Colored String) -> IO ()
+hPrintColoredS h = showColoredM (hPutStr h) (hPutStr h)
 
-printColoredS :: Term -> [Colored String] -> IO ()
+printColoredS :: Foldable f => Term -> f (Colored String) -> IO ()
 printColoredS = hPrintColoredS stdout
 
-showColoredS :: Term -> [Colored String] -> ShowS
+showColoredS :: Foldable f => Term -> f (Colored String) -> ShowS
 showColoredS = showColored (++) (++)
 
-showColored :: Monoid o => (a -> o) -> (SGRCode -> o) -> Term -> [Colored a] -> o
-showColored str code term flat = runIdentity $ showColoredA (pure . str) (pure . code) term flat
+showColored :: (Foldable f, Monoid o) => (a -> o) -> (SGRCode -> o) -> Term -> f (Colored a) -> o
+showColored str code term flat = runIdentity $ showColoredM (pure . str) (pure . code) term flat
 
-showColoredA :: (Applicative f, Monoid o) => (a -> f o) -> (SGRCode -> f o) -> Term -> [Colored a] -> f o
-showColoredA str code term = go (defaultSettings, (defaultSettings, []))
-  where go s (Style   a:b) = go ((second.first) (setStyle a True) s) b
-        go s (Unstyle a:b) = go ((second.first) (setStyle a False) s) b
-        go s (Fg      a:b) = go ((second.first) (setFg a) s) b
-        go s (Bg      a:b) = go ((second.first) (setBg a) s) b
-        go s (Push     :b) = go (second pushStack s) b
-        go s (Pop      :b) = go (second popStack s) b
-        go s (Reset    :b) = go (second resetStack s) b
-        go s (Value   a:b) = let (old, stack@(new, _)) = s in
-          mappend <$> (mappend <$> code (sgrCode term old new) <*> str a) <*> go (new, stack) b
-        go s [] = let (old, (new, _)) = s in code (sgrCode term old new)
-{-# SPECIALIZE showColoredA :: Monoid o => (a -> Identity o) -> (SGRCode -> Identity o) -> Term -> [Colored a] -> Identity o #-}
-{-# SPECIALIZE showColoredA :: Monoid o => (a -> (o -> o)) -> (SGRCode -> (o -> o)) -> Term -> [Colored a] -> (o -> o) #-}
+showColoredM :: (Foldable f, Monad m, Monoid o) => (a -> m o) -> (SGRCode -> m o) -> Term -> f (Colored a) -> m o
+showColoredM str code term list = do
+  s <- foldlM go (State mempty defaultSettings (defaultSettings, [])) list
+  mappend (stateStr s) <$> code (sgrCode term (stateActive s) (fst $ stateStack s))
+  where go s Push        = pure $ s { stateStack = pushStack $ stateStack s }
+        go s Pop         = pure $ s { stateStack = popStack $ stateStack s }
+        go s Reset       = pure $ s { stateStack = resetStack $ stateStack s }
+        go s (Style   a) = pure $ mapTop (setStyle a True) s
+        go s (Unstyle a) = pure $ mapTop (setStyle a False) s
+        go s (Fg      a) = pure $ mapTop (setFg a) s
+        go s (Bg      a) = pure $ mapTop (setBg a) s
+        go s (Value   a) = do
+          !x <- code (sgrCode term (stateActive s) (fst $ stateStack s))
+          !y <- str a
+          let !z = x `mappend` y
+          pure $ s { stateStr = stateStr s `mappend` z, stateActive = fst $ stateStack s }
+{-# SPECIALIZE showColoredM :: Monoid o => (a -> Identity o) -> (SGRCode -> Identity o) -> Term -> [Colored a] -> Identity o #-}
+{-# SPECIALIZE showColoredM :: Monoid o => (a -> (o -> o)) -> (SGRCode -> (o -> o)) -> Term -> [Colored a] -> (o -> o) #-}
+
+data State a = State
+  { stateStr  :: !a
+  , stateActive :: !Settings
+  , stateStack  :: !(Settings, [Settings])
+  }
+
+mapTop :: (Settings -> Settings) -> State a -> State a
+mapTop f s = let !t = f $ fst $ stateStack s in s { stateStack = (t, snd $ stateStack s) }
+{-# INLINE mapTop #-}
