@@ -33,7 +33,7 @@ module Data.Monoid.Colorful.Flat (
   , hGetTerm
   , getTerm
 
-  -- ** Colorful printing to file handle
+  -- * Colorful printing to file handle
   , hPrintColored
   , printColored
   , hPrintColoredIO
@@ -41,7 +41,7 @@ module Data.Monoid.Colorful.Flat (
   , hPrintColoredS
   , printColoredS
 
-  -- ** Show with ANSI escape sequences
+  -- * Show with ANSI escape sequences
   , showColored
   , showColoredM
   , showColoredS
