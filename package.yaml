@@ -8,7 +8,7 @@ synopsis: Styled console text output using ANSI escape sequences.
 stability: experimental
 author: Daniel Mendler <mail@daniel-mendler.de>
 maintainer: Daniel Mendler <mail@daniel-mendler.de>
-copyright: 2017 Daniel Mendler
+copyright: 2017-2018 Daniel Mendler
 license: MIT
 github: minad/colorful-monoids
 

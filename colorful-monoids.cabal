@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 216a39a0c101a586c71b898e6159f61315480bb446332b1add75a7bd37825774
+-- hash: e15e55fee2ffbcab50bb30e2a6fa142c105abb9f985135497f3b3a5100981732
 
 name:           colorful-monoids
 version:        0.2.1.1
@@ -14,7 +14,7 @@ homepage:       https://github.com/minad/colorful-monoids#readme
 bug-reports:    https://github.com/minad/colorful-monoids/issues
 author:         Daniel Mendler <mail@daniel-mendler.de>
 maintainer:     Daniel Mendler <mail@daniel-mendler.de>
-copyright:      2017 Daniel Mendler
+copyright:      2017-2018 Daniel Mendler
 license:        MIT
 license-file:   LICENSE
 tested-with:    GHC == 7.10.3, GHC == 8.0.1, GHC == 8.4.2
