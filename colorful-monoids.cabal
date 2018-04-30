@@ -2,10 +2,10 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 82e886f80f9d48fe1ceef9156ac5e3a8671455d9dfcab4bede061c1cb761fe37
+-- hash: b2af70185d8687c764ddb644063384f87b3c09bd1d43eed9e231ea4e87e33e75
 
 name:           colorful-monoids
-version:        0.2.1.0
+version:        0.2.1.1
 synopsis:       Styled console text output using ANSI escape sequences.
 description:    Styled console text output using ANSI escape sequences.
 category:       Text, User Interfaces, Monad
@@ -26,14 +26,6 @@ source-repository head
   location: https://github.com/minad/colorful-monoids
 
 library
-  hs-source-dirs:
-      src
-  ghc-options: -Wall
-  build-depends:
-      base >=4.8 && <5
-  if impl(ghc < 8.0)
-    build-depends:
-        semigroups >=0.9 && <1
   exposed-modules:
       Data.Monoid.Colorful
       Data.Monoid.Colorful.Flat
@@ -45,6 +37,14 @@ library
       Data.Monoid.Colorful.Term
       Data.Monoid.Colorful.Trustworthy
       Paths_colorful_monoids
+  hs-source-dirs:
+      src
+  ghc-options: -Wall
+  build-depends:
+      base >=4.8 && <5
+  if impl(ghc < 8.0)
+    build-depends:
+        semigroups >=0.9 && <1
   default-language: Haskell2010
 
 test-suite example
