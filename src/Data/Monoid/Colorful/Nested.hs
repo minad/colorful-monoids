@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP #-}
 
 module Data.Monoid.Colorful.Nested (
   Style(..)
@@ -59,10 +60,14 @@ instance Monad Colored where
   Bg      a x >>= f = Bg      a (x >>= f)
   Pair    x y >>= f = Pair      (x >>= f) (y >>= f)
 
-instance Semigroup (Colored a)
+instance Semigroup (Colored a) where
+  (<>) = Pair
+
 instance Monoid (Colored a) where
   mempty = Nil
-  mappend = Pair
+#if !(MIN_VERSION_base(4,11,0))
+  mappend = (<>)
+#endif
 
 instance IsString a => IsString (Colored a) where
   fromString = Value . fromString
