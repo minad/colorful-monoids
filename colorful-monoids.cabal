@@ -2,12 +2,12 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b2af70185d8687c764ddb644063384f87b3c09bd1d43eed9e231ea4e87e33e75
+-- hash: 216a39a0c101a586c71b898e6159f61315480bb446332b1add75a7bd37825774
 
 name:           colorful-monoids
 version:        0.2.1.1
 synopsis:       Styled console text output using ANSI escape sequences.
-description:    Styled console text output using ANSI escape sequences.
+description:    This library provides styled text output using ANSI escape sequences. The colored text is modeled as nested Colored values, which form a Monoid. As a result the colored code has a relatively concise form.
 category:       Text, User Interfaces, Monad
 stability:      experimental
 homepage:       https://github.com/minad/colorful-monoids#readme
