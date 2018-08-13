@@ -1,5 +1,5 @@
 name: colorful-monoids
-version: 0.2.1.1
+version: 0.2.1.2
 category: Text, User Interfaces, Monad
 description: This library provides styled text output using ANSI escape sequences.
              The colored text is modeled as nested Colored values, which form a Monoid.
