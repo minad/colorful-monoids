@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4dd693235a67055e822734457a4fbe50bc4d970d104d43b5baa6c1f92ad1d6e6
+-- hash: e49970190fafc08bc0825d927a0907d0c28607ccb4b15dcead5c2929dc0dcf87
 
 name:           colorful-monoids
 version:        0.2.1.2
@@ -19,7 +21,6 @@ license:        MIT
 license-file:   LICENSE
 tested-with:    GHC == 7.10.3, GHC == 8.0.1, GHC == 8.4.2, GHC == 8.6.1
 build-type:     Simple
-cabal-version:  >= 1.10
 
 source-repository head
   type: git

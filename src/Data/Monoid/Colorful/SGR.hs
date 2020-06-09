@@ -40,7 +40,6 @@ sgrCode t old new
 
   flag  f n = update f $ bool (20 + n:) (n:)
   color f n = update (reduceColor t . f) $ sgrColorArgs n
-{-# INLINE sgrCode #-}
 
 sgrColorArgs :: Word8 -> Color -> ([Word8] -> [Word8])
 sgrColorArgs n c = case c of
@@ -63,4 +62,3 @@ sgrColorArgs n c = case c of
   DullCyan     -> (36 + n:)
   DullWhite    -> (37 + n:)
   DefaultColor -> (39 + n:)
-{-# INLINE sgrColorArgs #-}

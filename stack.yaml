@@ -1,5 +1,6 @@
 packages:
 - .
-resolver: nightly-2018-08-13
-compiler: ghc-8.6.0.20180810
-compiler-check: match-exact
+resolver: nightly-2020-05-26
+build:
+  library-stripping: false
+  executable-stripping: false

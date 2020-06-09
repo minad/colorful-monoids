@@ -5,6 +5,7 @@ wiki
 TAGS
 tags
 wip
+stack.yaml.lock
 .stack-work
 .DS_Store
 .*.swp
