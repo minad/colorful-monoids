@@ -1,13 +1,6 @@
 cabal-version: 1.12
-
--- This file has been generated from package.yaml by hpack version 0.33.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: e49970190fafc08bc0825d927a0907d0c28607ccb4b15dcead5c2929dc0dcf87
-
 name:           colorful-monoids
-version:        0.2.1.2
+version:        0.2.1.3
 synopsis:       Styled console text output using ANSI escape sequences.
 description:    This library provides styled text output using ANSI escape sequences. The colored text is modeled as nested Colored values, which form a Monoid. As a result the colored code has a relatively concise form.
 category:       Text, User Interfaces, Monad
